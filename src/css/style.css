@@ -6,13 +6,27 @@
     position: relative;
 
     width: 250px;
+    min-width: 250px;
     min-height: 100vh;
 
     background-color: #212529;
 
     flex-shrink: 0;
 
-    transition: width 0.3s ease;
+    overflow: visible;
+
+    /* EXPAND (default): wadah melebar duluan, tanpa delay */
+    transition: width 0.3s ease,
+        min-width 0.3s ease;
+}
+
+/* COLLAPSE: wadah baru mulai menyusut SETELAH isi selesai pudar */
+.sidebar.collapsed {
+    width: 0;
+    min-width: 0;
+
+    transition: width 0.3s ease 0.1s,
+        min-width 0.3s ease 0.1s;
 }
 
 
@@ -22,8 +36,37 @@
 
 .sidebar-inner {
     width: 250px;
+    min-width: 250px;
 
-    transition: opacity 0.2s ease;
+    overflow: hidden;
+
+    /* EXPAND (default): isi muncul SETELAH wadah cukup lebar */
+    transition: opacity 0.15s ease 0.15s;
+}
+
+.sidebar.collapsed .sidebar-inner {
+    opacity: 0;
+    pointer-events: none;
+
+    /* COLLAPSE: isi pudar duluan, tanpa delay */
+    transition: opacity 0.15s ease;
+}
+
+
+/* ========================================
+   BRAND
+======================================== */
+
+.sidebar-brand h4 {
+    display: flex;
+    align-items: center;
+
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.sidebar-brand i {
+    font-size: 1.2rem;
 }
 
 
@@ -42,20 +85,53 @@
 .sidebar .nav-link {
     width: 100%;
 
-    display: block;
+    display: flex;
+    align-items: center;
 
     padding: 0.75rem 1rem;
 
     color: #adb5bd;
 
     border-radius: 8px;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
+
+
+/* Icon */
+
+.sidebar .nav-link i {
+    width: 24px;
+
+    flex-shrink: 0;
+
+    font-size: 1rem;
+
+    text-align: center;
+
+    margin-right: 10px;
+}
+
+
+/* Text */
+
+.sidebar .nav-link span {
+    white-space: normal;
+}
+
+
+/* Hover */
 
 .sidebar .nav-link:hover {
     color: #ffffff;
 
     background-color: #343a40;
 }
+
+
+/* Active */
 
 .sidebar .nav-link.active {
     color: #ffffff;
@@ -79,6 +155,10 @@
     width: 32px;
     height: 42px;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     border: none;
 
     border-radius: 6px;
@@ -87,14 +167,15 @@
 
     color: #ffffff;
 
-    font-size: 26px;
-    line-height: 1;
+    font-size: 18px;
 
     cursor: pointer;
 
     z-index: 10;
 
-    transition: background-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        right 0.3s ease;
 }
 
 .sidebar-toggle:hover {
@@ -106,18 +187,8 @@
    COLLAPSED
 ======================================== */
 
-.sidebar.collapsed {
-    width: 0;
-}
+/* Tombol tetap terlihat */
 
-.sidebar.collapsed .sidebar-inner {
-    opacity: 0;
-
-    pointer-events: none;
-}
-
-
-/* Tombol tetap terlihat saat sidebar ditutup */
 .sidebar.collapsed .sidebar-toggle {
     right: -40px;
 

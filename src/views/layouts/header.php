@@ -14,6 +14,11 @@
         rel="stylesheet"
         href="assets/css/bootstrap.min.css">
 
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="assets/css/bootstrap-icons.css">
+
     <!-- Custom CSS -->
     <link
         rel="stylesheet"
