@@ -198,3 +198,169 @@
 .sidebar.collapsed .sidebar-toggle:hover {
     background-color: #343a40;
 }
+
+/* ========================================
+   SCAN DAFTAR HADIR
+======================================== */
+
+.scan-box {
+    min-height: 230px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+
+    background-color: #f8f9fa;
+
+    text-align: center;
+}
+
+
+.scan-icon {
+    width: 80px;
+    height: 80px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 12px;
+
+    background-color: #e9ecef;
+
+    color: #495057;
+
+    font-size: 38px;
+}
+
+
+.scan-result {
+    min-height: 230px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.result-icon {
+    width: 70px;
+    height: 70px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+
+    background-color: #f1f3f5;
+
+    color: #6c757d;
+
+    font-size: 32px;
+}
+
+/* ========================================
+   LUCKY DRAW
+======================================== */
+
+.winner-display {
+    min-height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.winner-placeholder {
+    text-align: center;
+}
+
+.winner-icon {
+    width: 90px;
+    height: 90px;
+
+    margin: 0 auto;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+
+    background-color: #f8f9fa;
+
+    color: #6c757d;
+
+    font-size: 42px;
+    font-weight: 700;
+}
+
+
+.winner-name {
+    font-size: 38px;
+    font-weight: 700;
+}
+
+
+.winner-department {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+
+.winner-prize {
+    display: inline-block;
+
+    margin-top: 15px;
+
+    padding: 8px 18px;
+
+    border-radius: 20px;
+
+    background-color: #fff3cd;
+
+    color: #664d03;
+
+    font-weight: 600;
+}
+
+
+.winner-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+
+.winner-item {
+    padding: 14px;
+
+    margin-bottom: 10px;
+
+    border-radius: 10px;
+
+    background-color: #fff3cd;
+
+    border-left: 5px solid #ffc107;
+}
+
+
+.winner-item-number {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+
+.winner-item-name {
+    font-weight: 600;
+}
+
+
+.winner-item-prize {
+    font-size: 13px;
+    color: #6c757d;
+}
