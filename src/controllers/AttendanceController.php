@@ -582,3 +582,200 @@ function getWinnerList(): array
 
     return $stmt->fetchAll();
 }
+
+// ============================================================
+// PRIZE PICKUP - CHECK
+// ============================================================
+
+/**
+ * Cek apakah NIK merupakan pemenang Lucky Draw.
+ */
+function checkPrize(string $nik): array
+{
+    $nik = trim($nik);
+
+    if ($nik === '') {
+        return [
+            'success' => false,
+            'type' => 'validation',
+            'message' => 'NIK belum diisi.'
+        ];
+    }
+
+    $pdo = getDatabaseConnection();
+
+    $stmt = $pdo->prepare("
+        SELECT
+            w.id,
+            w.peserta_id,
+            p.nik,
+            p.nama,
+            p.departemen,
+            h.nama_hadiah AS hadiah,
+            w.waktu_menang,
+            w.status_pengambilan,
+            w.waktu_pengambilan
+        FROM ramah_tamah.pemenang w
+        INNER JOIN ramah_tamah.peserta p
+            ON p.id = w.peserta_id
+        INNER JOIN ramah_tamah.hadiah h
+            ON h.id = w.hadiah_id
+        WHERE p.nik = :nik
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        ':nik' => $nik
+    ]);
+
+    $winner = $stmt->fetch();
+
+    if (!$winner) {
+        return [
+            'success' => false,
+            'type' => 'not_winner',
+            'message' => 'Peserta bukan merupakan pemenang Lucky Draw.'
+        ];
+    }
+
+    return [
+        'success' => true,
+        'type' => 'success',
+        'message' => 'Data pemenang ditemukan.',
+        'winner' => $winner
+    ];
+}
+
+// ============================================================
+// PRIZE PICKUP - TAKE PRIZE
+// ============================================================
+
+/**
+ * Konfirmasi pengambilan hadiah.
+ *
+ * Menggunakan row lock agar dua scanner
+ * tidak dapat mengonfirmasi hadiah yang sama
+ * secara bersamaan.
+ */
+function takePrize(int $pemenangId): array
+{
+    if ($pemenangId < 1) {
+        return [
+            'success' => false,
+            'type' => 'validation',
+            'message' => 'ID pemenang tidak valid.'
+        ];
+    }
+
+    $pdo = getDatabaseConnection();
+
+    try {
+
+        $pdo->beginTransaction();
+
+        /*
+         * Kunci baris pemenang.
+         *
+         * Jika scanner lain sedang memproses
+         * pemenang yang sama, proses ini akan menunggu
+         * sampai transaksi scanner pertama selesai.
+         */
+        $stmt = $pdo->prepare("
+            SELECT
+                w.id,
+                w.status_pengambilan,
+                w.waktu_pengambilan,
+                p.nik,
+                p.nama,
+                p.departemen,
+                h.nama_hadiah AS hadiah
+            FROM ramah_tamah.pemenang w
+            INNER JOIN ramah_tamah.peserta p
+                ON p.id = w.peserta_id
+            INNER JOIN ramah_tamah.hadiah h
+                ON h.id = w.hadiah_id
+            WHERE w.id = :id
+            FOR UPDATE
+        ");
+
+        $stmt->execute([
+            ':id' => $pemenangId
+        ]);
+
+        $winner = $stmt->fetch();
+
+        /*
+         * Pemenang tidak ditemukan.
+         */
+        if (!$winner) {
+
+            $pdo->rollBack();
+
+            return [
+                'success' => false,
+                'type' => 'not_found',
+                'message' => 'Data pemenang tidak ditemukan.'
+            ];
+        }
+
+        /*
+         * Hadiah sudah pernah diambil.
+         */
+        if ($winner['status_pengambilan'] === 'DIAMBIL') {
+
+            $pdo->rollBack();
+
+            return [
+                'success' => false,
+                'type' => 'already_taken',
+                'message' => 'Hadiah sudah diambil sebelumnya.',
+                'winner' => $winner
+            ];
+        }
+
+        /*
+         * Ubah status menjadi DIAMBIL.
+         */
+        $stmt = $pdo->prepare("
+            UPDATE ramah_tamah.pemenang
+            SET
+                status_pengambilan = 'DIAMBIL',
+                waktu_pengambilan = NOW()
+            WHERE id = :id
+            RETURNING
+                id,
+                status_pengambilan,
+                waktu_pengambilan
+        ");
+
+        $stmt->execute([
+            ':id' => $pemenangId
+        ]);
+
+        $result = $stmt->fetch();
+
+        $pdo->commit();
+
+        return [
+            'success' => true,
+            'type' => 'success',
+            'message' => 'Hadiah berhasil dikonfirmasi sebagai sudah diambil.',
+            'winner' => [
+                'id' => $winner['id'],
+                'nik' => $winner['nik'],
+                'nama' => $winner['nama'],
+                'departemen' => $winner['departemen'],
+                'hadiah' => $winner['hadiah'],
+                'status_pengambilan' => $result['status_pengambilan'],
+                'waktu_pengambilan' => $result['waktu_pengambilan']
+            ]
+        ];
+    } catch (Throwable $e) {
+
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $e;
+    }
+}

@@ -442,6 +442,45 @@ async function loadAttendanceList() {
 }
 
 // ============================================================
+// LUCKY DRAW - ANIMATION STYLES (BLUR EFFECT)
+// ============================================================
+
+function injectLuckyDrawAnimationStyles() {
+  if (document.getElementById("luckyDrawAnimationStyles")) {
+    return;
+  }
+
+  const style = document.createElement("style");
+
+  style.id = "luckyDrawAnimationStyles";
+
+  style.textContent = `
+        .winner-shuffle-blur {
+            animation: winnerShuffleBlur 0.12s ease-out;
+        }
+
+        @keyframes winnerShuffleBlur {
+            0% {
+                filter: blur(10px);
+                opacity: 0.35;
+            }
+
+            60% {
+                filter: blur(3px);
+                opacity: 0.8;
+            }
+
+            100% {
+                filter: blur(0);
+                opacity: 1;
+            }
+        }
+    `;
+
+  document.head.appendChild(style);
+}
+
+// ============================================================
 // LUCKY DRAW
 // ============================================================
 
@@ -453,6 +492,12 @@ function initLuckyDraw() {
   if (!modeAuto || !modeManual) {
     return;
   }
+
+  /*
+   * Suntikkan CSS efek blur untuk animasi
+   * pengacakan nama, hanya sekali.
+   */
+  injectLuckyDrawAnimationStyles();
 
   const autoMode = document.getElementById("autoMode");
 
@@ -942,7 +987,7 @@ function initLuckyDraw() {
 
     container.innerHTML = `
 
-            <div class="winner-animation">
+            <div class="winner-animation winner-shuffle-blur">
 
                 <div class="winner-icon">
                     ?
@@ -1423,6 +1468,736 @@ function addWinnersToList(winners) {
 // INITIALIZE APPLICATION
 // ============================================================
 
+// ============================================================
+// PRIZE PICKUP - SCAN HADIAH
+// ============================================================
+
+let currentPrizeWinnerId = null;
+
+// ============================================================
+// PRIZE PICKUP - CHECK / VERIFY NIK
+// ============================================================
+
+function initPrizeCheck() {
+  const form = document.getElementById("prizeCheckForm");
+
+  const nikInput = document.getElementById("prizeNikInput");
+
+  if (!form || !nikInput) {
+    return;
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const nik = nikInput.value.trim();
+
+    if (nik === "") {
+      nikInput.focus();
+
+      return;
+    }
+
+    try {
+      const response = await fetch("index.php?action=check-prize", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          nik: nik,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      console.log("Check prize response:", result);
+
+      // ====================================================
+      // PEMENANG DITEMUKAN
+      // ====================================================
+
+      if (result.success && result.winner) {
+        showPrizeResult(result.winner);
+
+        return;
+      }
+
+      // ====================================================
+      // BUKAN PEMENANG
+      // ====================================================
+
+      if (result.type === "not_winner") {
+        showPrizeError(
+          "Bukan Pemenang",
+          result.message || "Peserta bukan merupakan pemenang Lucky Draw.",
+        );
+
+        return;
+      }
+
+      showPrizeError(
+        "Terjadi Kesalahan",
+        result.message || "Tidak dapat memverifikasi peserta.",
+      );
+    } catch (error) {
+      console.error("Check prize error:", error);
+
+      showPrizeError(
+        "Terjadi Kesalahan",
+        "Tidak dapat memproses permintaan ke server.",
+      );
+    }
+  });
+}
+
+// ============================================================
+// PRIZE PICKUP - SHOW RESULT
+// ============================================================
+
+function showPrizeResult(winner) {
+  const empty = document.getElementById("prizeEmpty");
+
+  const result = document.getElementById("prizeResult");
+
+  const error = document.getElementById("prizeError");
+
+  if (!empty || !result || !error) {
+    return;
+  }
+
+  empty.classList.add("d-none");
+
+  error.classList.add("d-none");
+
+  result.classList.remove("d-none");
+
+  currentPrizeWinnerId = Number(winner.id);
+
+  const nameEl = document.getElementById("prizeParticipantName");
+
+  const departmentEl = document.getElementById("prizeParticipantDepartment");
+
+  const nikEl = document.getElementById("prizeParticipantNik");
+
+  const hadiahEl = document.getElementById("prizeName");
+
+  const statusEl = document.getElementById("prizeStatus");
+
+  const actionEl = document.getElementById("prizeAction");
+
+  if (nameEl) {
+    nameEl.textContent = winner.nama || "-";
+  }
+
+  if (departmentEl) {
+    departmentEl.textContent = winner.departemen || "-";
+  }
+
+  if (nikEl) {
+    nikEl.textContent = winner.nik || "-";
+  }
+
+  if (hadiahEl) {
+    hadiahEl.textContent = winner.hadiah || "-";
+  }
+
+  const sudahDiambil = winner.status_pengambilan === "DIAMBIL";
+
+  if (statusEl) {
+    if (sudahDiambil) {
+      statusEl.innerHTML = `
+                <div class="alert alert-secondary mb-0">
+                    <strong>Sudah Diambil</strong> —
+                    diambil pada
+                    ${escapeHtml(formatDateTime(winner.waktu_pengambilan))}
+                </div>
+            `;
+    } else {
+      statusEl.innerHTML = `
+                <div class="alert alert-success mb-0">
+                    <strong>Pemenang Terverifikasi</strong> —
+                    hadiah belum diambil.
+                </div>
+            `;
+    }
+  }
+
+  if (actionEl) {
+    if (sudahDiambil) {
+      actionEl.innerHTML = `
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-lg w-100"
+                    disabled
+                >
+                    Hadiah Sudah Diambil
+                </button>
+            `;
+    } else {
+      actionEl.innerHTML = `
+                <button
+                    type="button"
+                    id="takePrizeButton"
+                    class="btn btn-success btn-lg w-100"
+                >
+                    Konfirmasi Pengambilan Hadiah
+                </button>
+            `;
+
+      bindTakePrizeButton();
+    }
+  }
+
+  const nikInput = document.getElementById("prizeNikInput");
+
+  if (nikInput) {
+    nikInput.value = "";
+
+    nikInput.focus();
+  }
+}
+
+// ============================================================
+// PRIZE PICKUP - SHOW ERROR
+// ============================================================
+
+function showPrizeError(title, message) {
+  const empty = document.getElementById("prizeEmpty");
+
+  const result = document.getElementById("prizeResult");
+
+  const error = document.getElementById("prizeError");
+
+  if (!empty || !result || !error) {
+    return;
+  }
+
+  empty.classList.add("d-none");
+
+  result.classList.add("d-none");
+
+  error.classList.remove("d-none");
+
+  currentPrizeWinnerId = null;
+
+  const titleEl = document.getElementById("prizeErrorTitle");
+
+  const messageEl = document.getElementById("prizeErrorMessage");
+
+  if (titleEl) {
+    titleEl.textContent = title;
+  }
+
+  if (messageEl) {
+    messageEl.textContent = message;
+  }
+
+  const nikInput = document.getElementById("prizeNikInput");
+
+  if (nikInput) {
+    nikInput.select();
+  }
+}
+
+// ============================================================
+// PRIZE PICKUP - CONFIRM TAKE PRIZE
+// ============================================================
+
+function bindTakePrizeButton() {
+  const button = document.getElementById("takePrizeButton");
+
+  if (!button) {
+    return;
+  }
+
+  button.addEventListener("click", async function () {
+    if (!currentPrizeWinnerId) {
+      alert("Data pemenang tidak ditemukan.");
+
+      return;
+    }
+
+    button.disabled = true;
+
+    button.textContent = "Memproses...";
+
+    try {
+      const response = await fetch("index.php?action=take-prize", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          pemenang_id: currentPrizeWinnerId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      console.log("Take prize response:", result);
+
+      // ====================================================
+      // SUDAH DIAMBIL SEBELUMNYA / GAGAL
+      // ====================================================
+
+      if (!result.success) {
+        alert(result.message || "Gagal mengonfirmasi pengambilan hadiah.");
+
+        if (result.winner) {
+          showPrizeResult(result.winner);
+        } else {
+          button.disabled = false;
+
+          button.textContent = "Konfirmasi Pengambilan Hadiah";
+        }
+
+        return;
+      }
+
+      // ====================================================
+      // BERHASIL
+      // ====================================================
+
+      showPrizeResult(result.winner);
+
+      loadPrizeWinnerList();
+    } catch (error) {
+      console.error("Take prize error:", error);
+
+      alert("Tidak dapat memproses konfirmasi pengambilan hadiah.");
+
+      button.disabled = false;
+
+      button.textContent = "Konfirmasi Pengambilan Hadiah";
+    }
+  });
+}
+
+// ============================================================
+// PRIZE PICKUP - WINNER / PICKUP LIST
+// ============================================================
+
+async function loadPrizeWinnerList() {
+  const table = document.getElementById("prizeWinnerTable");
+
+  const badge = document.getElementById("prizeWinnerCount");
+
+  if (!table) {
+    return;
+  }
+
+  try {
+    const response = await fetch("index.php?action=winner-list");
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Gagal mengambil daftar pemenang.");
+    }
+
+    const winners = Array.isArray(result.data) ? result.data : [];
+
+    if (badge) {
+      badge.textContent = `${winners.length} Pemenang`;
+    }
+
+    if (winners.length === 0) {
+      table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="8"
+                        class="text-center text-muted py-4"
+                    >
+                        Belum ada pemenang.
+                    </td>
+                </tr>
+            `;
+
+      return;
+    }
+
+    table.innerHTML = "";
+
+    winners.forEach(function (winner, index) {
+      const sudahDiambil = winner.status_pengambilan === "DIAMBIL";
+
+      const statusBadge = sudahDiambil
+        ? '<span class="badge bg-success">Sudah Diambil</span>'
+        : '<span class="badge bg-warning text-dark">Belum Diambil</span>';
+
+      table.innerHTML += `
+                <tr>
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(winner.nik)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(winner.nama)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(winner.departemen)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(winner.hadiah)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(formatDateTime(winner.waktu_menang))}
+                    </td>
+
+                    <td>
+                        ${
+                          winner.waktu_pengambilan
+                            ? escapeHtml(
+                                formatDateTime(winner.waktu_pengambilan),
+                              )
+                            : "-"
+                        }
+                    </td>
+
+                    <td>
+                        ${statusBadge}
+                    </td>
+
+                </tr>
+            `;
+    });
+  } catch (error) {
+    console.error("Gagal mengambil daftar pemenang:", error);
+  }
+}
+
+// ============================================================
+// DASHBOARD - WINNER OVERVIEW
+// ============================================================
+
+let dashboardRefreshTimer = null;
+
+function initDashboardWinners() {
+  const container = document.getElementById("dashboardWinnerGroups");
+
+  if (!container) {
+    return;
+  }
+
+  loadDashboardWinners();
+
+  /*
+   * Refresh otomatis supaya layar dashboard
+   * selalu menampilkan data terbaru tanpa
+   * perlu reload manual.
+   */
+  if (dashboardRefreshTimer !== null) {
+    clearInterval(dashboardRefreshTimer);
+  }
+
+  dashboardRefreshTimer = setInterval(loadDashboardWinners, 5000);
+}
+
+// ============================================================
+// DASHBOARD - LOAD DATA
+// ============================================================
+
+async function loadDashboardWinners() {
+  const container = document.getElementById("dashboardWinnerGroups");
+
+  if (!container) {
+    return;
+  }
+
+  try {
+    const response = await fetch("index.php?action=winner-list");
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Gagal mengambil data pemenang.");
+    }
+
+    const winners = Array.isArray(result.data) ? result.data : [];
+
+    renderDashboardWinners(winners);
+  } catch (error) {
+    console.error("Gagal mengambil data pemenang:", error);
+  }
+}
+
+// ============================================================
+// DASHBOARD - RENDER (GROUP PER HADIAH)
+// ============================================================
+
+function renderDashboardWinners(winners) {
+  const container = document.getElementById("dashboardWinnerGroups");
+
+  if (!container) {
+    return;
+  }
+
+  if (!winners || winners.length === 0) {
+    container.innerHTML = `
+            <div class="text-center text-muted py-5">
+                Belum ada pemenang.
+            </div>
+        `;
+
+    return;
+  }
+
+  /*
+   * Urutkan dari pemenang paling awal ke paling baru
+   * per hadiah, supaya nomor urut (1, 2, 3, ...)
+   * tetap konsisten setiap kali data di-refresh.
+   */
+  const sorted = [...winners].sort(function (a, b) {
+    return new Date(a.waktu_menang) - new Date(b.waktu_menang);
+  });
+
+  const groups = new Map();
+
+  sorted.forEach(function (winner) {
+    const key = winner.hadiah || "Tanpa Nama Hadiah";
+
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+
+    groups.get(key).push(winner);
+  });
+
+  container.innerHTML = "";
+
+  groups.forEach(function (groupWinners, hadiahName) {
+    const sudahDiambilCount = groupWinners.filter(function (winner) {
+      return winner.status_pengambilan === "DIAMBIL";
+    }).length;
+
+    const belumDiambilCount = groupWinners.length - sudahDiambilCount;
+
+    const card = document.createElement("div");
+
+    card.className = "card shadow-sm mb-4";
+
+    card.innerHTML = `
+            <div class="card-header d-flex flex-column align-items-center text-center gap-2">
+
+                <h4 class="mb-0">
+                    ${escapeHtml(hadiahName)}
+                </h4>
+
+                <div class="small">
+
+                    <span class="badge bg-warning text-dark me-1">
+                        Belum Diambil: ${belumDiambilCount}
+                    </span>
+
+                    <span class="badge bg-success">
+                        Sudah Diambil: ${sudahDiambilCount}
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="dashboard-winner-list">
+
+                    ${groupWinners
+                      .map(function (winner, index) {
+                        const sudah =
+                          winner.status_pengambilan === "DIAMBIL";
+
+                        const colorClass = sudah
+                          ? "dashboard-winner-hijau"
+                          : "dashboard-winner-kuning";
+
+                        return `
+                                <div class="dashboard-winner-row ${colorClass}">
+
+                                    <span class="dashboard-winner-number">
+                                        ${index + 1}
+                                    </span>
+
+                                    <span class="dashboard-winner-nik">
+                                        ${escapeHtml(winner.nik)}
+                                    </span>
+
+                                    <span class="dashboard-winner-name">
+                                        ${escapeHtml(winner.nama)}
+                                    </span>
+
+                                    <span class="dashboard-winner-dept">
+                                        ${escapeHtml(winner.departemen)}
+                                    </span>
+
+                                </div>
+                            `;
+                      })
+                      .join("")}
+
+                </div>
+
+            </div>
+        `;
+
+    container.appendChild(card);
+  });
+}
+
+// ============================================================
+// DASHBOARD - AUTO SCROLL (TOP <-> BOTTOM, LOOP)
+// ============================================================
+
+const AUTO_SCROLL_STEP = 2;
+
+const AUTO_SCROLL_INTERVAL = 20;
+
+const AUTO_SCROLL_PAUSE = 1500;
+
+let autoScrollEnabled = true;
+
+let autoScrollDirection = 1;
+
+let autoScrollTimer = null;
+
+function initAutoScroll() {
+  const toggle = document.getElementById("autoScrollToggle");
+
+  if (!toggle) {
+    return;
+  }
+
+  autoScrollEnabled = toggle.checked;
+
+  toggle.addEventListener("change", function () {
+    autoScrollEnabled = this.checked;
+
+    if (autoScrollEnabled) {
+      startAutoScroll();
+    } else {
+      stopAutoScroll();
+    }
+  });
+
+  if (autoScrollEnabled) {
+    startAutoScroll();
+  }
+}
+
+// ============================================================
+// DASHBOARD - AUTO SCROLL - START
+// ============================================================
+
+function startAutoScroll() {
+  stopAutoScroll();
+
+  autoScrollStep();
+}
+
+// ============================================================
+// DASHBOARD - AUTO SCROLL - STEP
+// ============================================================
+
+function autoScrollStep() {
+  if (!autoScrollEnabled) {
+    autoScrollTimer = null;
+
+    return;
+  }
+
+  const scrollHeight = document.documentElement.scrollHeight;
+
+  const clientHeight = document.documentElement.clientHeight;
+
+  const maxScroll = Math.max(scrollHeight - clientHeight, 0);
+
+  let current = window.scrollY;
+
+  if (autoScrollDirection === 1) {
+    current += AUTO_SCROLL_STEP;
+
+    /*
+     * Sudah sampai bawah.
+     *
+     * Berhenti sebentar, lalu balik arah ke atas.
+     */
+    if (current >= maxScroll) {
+      window.scrollTo(0, maxScroll);
+
+      autoScrollDirection = -1;
+
+      autoScrollTimer = setTimeout(autoScrollStep, AUTO_SCROLL_PAUSE);
+
+      return;
+    }
+  } else {
+    current -= AUTO_SCROLL_STEP;
+
+    /*
+     * Sudah sampai atas.
+     *
+     * Berhenti sebentar, lalu balik arah ke bawah.
+     */
+    if (current <= 0) {
+      window.scrollTo(0, 0);
+
+      autoScrollDirection = 1;
+
+      autoScrollTimer = setTimeout(autoScrollStep, AUTO_SCROLL_PAUSE);
+
+      return;
+    }
+  }
+
+  window.scrollTo(0, current);
+
+  autoScrollTimer = setTimeout(autoScrollStep, AUTO_SCROLL_INTERVAL);
+}
+
+// ============================================================
+// DASHBOARD - AUTO SCROLL - STOP
+// ============================================================
+
+function stopAutoScroll() {
+  if (autoScrollTimer !== null) {
+    clearTimeout(autoScrollTimer);
+
+    autoScrollTimer = null;
+  }
+}
+
+// ============================================================
+// INITIALIZE APPLICATION
+// ============================================================
+
 document.addEventListener("DOMContentLoaded", function () {
   initSidebar();
 
@@ -1431,4 +2206,12 @@ document.addEventListener("DOMContentLoaded", function () {
   initLuckyDraw();
 
   loadAttendanceList();
+
+  initPrizeCheck();
+
+  loadPrizeWinnerList();
+
+  initDashboardWinners();
+
+  initAutoScroll();
 });

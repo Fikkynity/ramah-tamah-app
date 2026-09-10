@@ -193,6 +193,83 @@ if (
     exit;
 }
 
+// ========================================
+// API - CHECK PRIZE
+// ========================================
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_GET['action'] ?? '') === 'check-prize'
+) {
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        $input = json_decode(
+            file_get_contents('php://input'),
+            true
+        );
+
+        $nik = trim($input['nik'] ?? '');
+
+        echo json_encode(
+            checkPrize($nik),
+            JSON_UNESCAPED_UNICODE
+        );
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'success' => false,
+            'type' => 'server_error',
+            'message' => $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    exit;
+}
+
+
+// ========================================
+// API - TAKE PRIZE
+// ========================================
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_GET['action'] ?? '') === 'take-prize'
+) {
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        $input = json_decode(
+            file_get_contents('php://input'),
+            true
+        );
+
+        $pemenangId = (int) ($input['pemenang_id'] ?? 0);
+
+        echo json_encode(
+            takePrize($pemenangId),
+            JSON_UNESCAPED_UNICODE
+        );
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'success' => false,
+            'type' => 'server_error',
+            'message' => $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    exit;
+}
+
 
 // ========================================
 // ERROR REPORTING
