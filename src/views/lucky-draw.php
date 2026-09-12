@@ -100,7 +100,9 @@
                                     type="text"
                                     id="autoPrize"
                                     class="form-control form-control-lg"
-                                    placeholder="Masukkan Hadiah">
+                                    placeholder="Masukkan Hadiah"
+                                    autofocus
+                                    oninput="this.value = this.value.toUpperCase()">
 
                             </div>
 
@@ -184,7 +186,8 @@
                                     type="text"
                                     id="manualPrize"
                                     class="form-control form-control-lg"
-                                    placeholder="Masukkan Hadiah">
+                                    placeholder="Masukkan Hadiah"
+                                    oninput="this.value = this.value.toUpperCase()">
 
                             </div>
 

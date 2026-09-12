@@ -4,7 +4,7 @@
 
         <!-- Brand -->
         <div class="mb-4">
-            <h4 class="text-white mb-0">
+            <h4 class="mb-0">
                 <i class="bi bi-balloon-heart me-2"></i>
                 Ramah Tamah
             </h4>

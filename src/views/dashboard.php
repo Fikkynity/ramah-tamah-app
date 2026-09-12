@@ -44,6 +44,53 @@
 
 
     <!-- ================================================== -->
+    <!-- SEARCH BOX (CENTER) -->
+    <!-- ================================================== -->
+
+    <div class="d-flex justify-content-center mb-4">
+
+        <div class="dashboard-search-box">
+
+            <label
+                for="dashboardWinnerSearch"
+                class="form-label small text-muted mb-1 text-center d-block">
+                Cari NIK / Nama Peserta
+            </label>
+
+            <div class="input-group">
+
+                <span class="input-group-text bg-white">
+                    🔍
+                </span>
+
+                <input
+                    type="text"
+                    id="dashboardWinnerSearch"
+                    class="form-control"
+                    placeholder="Masukkan NIK atau nama..."
+                    autocomplete="off">
+
+                <button
+                    type="button"
+                    id="dashboardWinnerSearchClear"
+                    class="btn btn-outline-secondary d-none"
+                    title="Hapus pencarian">
+                    ✕
+                </button>
+
+            </div>
+
+            <div
+                id="dashboardSearchResultInfo"
+                class="form-text text-center">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================== -->
     <!-- WINNER GROUPS (DIISI OLEH JAVASCRIPT) -->
     <!-- ================================================== -->
 
@@ -71,45 +118,82 @@
         border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
-    .dashboard-winner-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    .dashboard-search-box {
+        min-width: 280px;
+        max-width: 420px;
+        width: 100%;
     }
 
-    .dashboard-winner-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        padding: 12px 18px;
-        border-radius: 8px;
+    .dashboard-winner-row mark.dashboard-search-highlight,
+    .dashboard-winner-item mark.dashboard-search-highlight {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #000000;
+        padding: 0 3px;
+        border-radius: 3px;
+    }
+
+    /*
+     * Grid, bukan 1 nama ke bawah.
+
+     * auto-fill + minmax bikin jumlah kolom
+     * menyesuaikan lebar layar secara
+     * otomatis (di laptop bisa ~4-5 kolom,
+     * di TV/proyektor lebar bisa ~7-8 kolom)
+     * - jadi tetap enak dibaca di device
+     * manapun tanpa perlu angka kolom yang
+     * di-hardcode.
+     *
+     * Efeknya juga bikin total tinggi
+     * halaman jauh lebih pendek walau
+     * pemenangnya ratusan, sehingga siklus
+     * auto-scroll jadi lebih singkat dan
+     * tiap nama lebih gampang ke-notice.
+     */
+    .dashboard-winner-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+        gap: 10px;
+    }
+
+    .dashboard-winner-item {
+        padding: 12px 10px;
+        border-radius: 10px;
         font-weight: 600;
         text-align: center;
         transition: transform 0.1s ease;
     }
 
-    .dashboard-winner-row:hover {
-        transform: scale(1.01);
+    .dashboard-winner-item:hover {
+        transform: scale(1.03);
     }
 
     .dashboard-winner-number {
+        font-size: 12px;
         font-weight: 700;
-        opacity: 0.75;
-    }
+        opacity: 0.7;
 
-    .dashboard-winner-nik {
-        font-variant-numeric: tabular-nums;
+        margin-bottom: 4px;
     }
 
     .dashboard-winner-name {
         font-weight: 700;
+
+        margin-bottom: 2px;
     }
 
     .dashboard-winner-dept {
+        font-size: 13px;
         font-weight: 500;
         opacity: 0.85;
+
+        margin-bottom: 4px;
+    }
+
+    .dashboard-winner-nik {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.8;
     }
 
     /* BELUM DIAMBIL */
@@ -122,14 +206,6 @@
     .dashboard-winner-hijau {
         background-color: #198754;
         color: #ffffff;
-    }
-
-    @media (max-width: 576px) {
-
-        .dashboard-winner-row {
-            flex-wrap: wrap;
-        }
-
     }
 
 </style>

@@ -402,12 +402,21 @@ async function loadAttendanceList() {
     return;
   }
 
-  table.innerHTML = "";
-
-  attendance.forEach(function (item, index) {
+  /*
+   * Bangun semua baris ke dalam array dulu,
+   * baru gabungkan dan render SEKALI ke DOM.
+   *
+   * Kalau pakai innerHTML += di dalam loop,
+   * setiap iterasi browser harus re-parse
+   * ULANG seluruh HTML yang sudah menumpuk
+   * dari awal - jadi lambat secara kuadratik
+   * begitu jumlah baris banyak (ratusan-
+   * ribuan peserta).
+   */
+  const rows = attendance.map(function (item, index) {
     const waktu = formatDateTime(item.waktu_datang);
 
-    table.innerHTML += `
+    return `
             <tr>
 
                 <td>
@@ -439,6 +448,8 @@ async function loadAttendanceList() {
             </tr>
         `;
   });
+
+  table.innerHTML = rows.join("");
 }
 
 // ============================================================
@@ -843,6 +854,22 @@ function initLuckyDraw() {
       alert("Silakan isi hadiah.");
 
       prizeElement.focus();
+
+      return;
+    }
+
+    /*
+     * Pastikan masih ada peserta yang tersedia
+     * SEBELUM animasi dimulai, supaya error
+     * langsung ketahuan saat tombol DRAW
+     * ditekan, bukan menunggu tombol STOP.
+     */
+    if (getEligibleParticipants().length < 1) {
+      alert(
+        "Semua peserta yang hadir sudah mendapatkan " +
+          "hadiah. Tidak ada lagi peserta yang tersedia " +
+          "untuk diundi.",
+      );
 
       return;
     }
@@ -1833,16 +1860,19 @@ async function loadPrizeWinnerList() {
       return;
     }
 
-    table.innerHTML = "";
-
-    winners.forEach(function (winner, index) {
+    /*
+     * Bangun semua baris ke array dulu, baru
+     * gabungkan dan render sekali ke DOM
+     * (hindari innerHTML += di dalam loop).
+     */
+    const rows = winners.map(function (winner, index) {
       const sudahDiambil = winner.status_pengambilan === "DIAMBIL";
 
       const statusBadge = sudahDiambil
         ? '<span class="badge bg-success">Sudah Diambil</span>'
         : '<span class="badge bg-warning text-dark">Belum Diambil</span>';
 
-      table.innerHTML += `
+      return `
                 <tr>
 
                     <td>
@@ -1886,6 +1916,8 @@ async function loadPrizeWinnerList() {
                 </tr>
             `;
     });
+
+    table.innerHTML = rows.join("");
   } catch (error) {
     console.error("Gagal mengambil daftar pemenang:", error);
   }
@@ -1897,6 +1929,10 @@ async function loadPrizeWinnerList() {
 
 let dashboardRefreshTimer = null;
 
+let dashboardWinnersData = [];
+
+let dashboardSearchTerm = "";
+
 function initDashboardWinners() {
   const container = document.getElementById("dashboardWinnerGroups");
 
@@ -1905,6 +1941,8 @@ function initDashboardWinners() {
   }
 
   loadDashboardWinners();
+
+  initDashboardSearch();
 
   /*
    * Refresh otomatis supaya layar dashboard
@@ -1942,19 +1980,152 @@ async function loadDashboardWinners() {
       throw new Error(result.message || "Gagal mengambil data pemenang.");
     }
 
-    const winners = Array.isArray(result.data) ? result.data : [];
+    dashboardWinnersData = Array.isArray(result.data) ? result.data : [];
 
-    renderDashboardWinners(winners);
+    /*
+     * Terapkan ulang kata kunci pencarian yang sedang
+     * aktif (kalau ada) setiap kali data di-refresh,
+     * supaya hasil pencarian tidak hilang tiba-tiba.
+     */
+    applyDashboardSearchFilter();
   } catch (error) {
     console.error("Gagal mengambil data pemenang:", error);
   }
 }
 
 // ============================================================
+// DASHBOARD - SEARCH
+// ============================================================
+
+function initDashboardSearch() {
+  const input = document.getElementById("dashboardWinnerSearch");
+
+  const clearButton = document.getElementById("dashboardWinnerSearchClear");
+
+  if (!input) {
+    return;
+  }
+
+  input.addEventListener("input", function () {
+    dashboardSearchTerm = this.value;
+
+    if (clearButton) {
+      clearButton.classList.toggle("d-none", this.value.trim() === "");
+    }
+
+    applyDashboardSearchFilter();
+  });
+
+  /*
+   * Jeda auto-scroll selagi user mengetik pencarian,
+   * supaya halaman tidak scroll sendiri di saat yang
+   * tidak diinginkan.
+   */
+  input.addEventListener("focus", function () {
+    stopAutoScroll();
+  });
+
+  input.addEventListener("blur", function () {
+    if (autoScrollEnabled) {
+      startAutoScroll();
+    }
+  });
+
+  if (clearButton) {
+    clearButton.addEventListener("click", function () {
+      input.value = "";
+
+      dashboardSearchTerm = "";
+
+      clearButton.classList.add("d-none");
+
+      applyDashboardSearchFilter();
+
+      input.focus();
+    });
+  }
+}
+
+// ============================================================
+// DASHBOARD - APPLY SEARCH FILTER
+// ============================================================
+
+function applyDashboardSearchFilter() {
+  const term = dashboardSearchTerm.trim();
+
+  let filtered = dashboardWinnersData;
+
+  if (term !== "") {
+    const lowerTerm = term.toLowerCase();
+
+    filtered = dashboardWinnersData.filter(function (winner) {
+      const nik = (winner.nik || "").toLowerCase();
+
+      const nama = (winner.nama || "").toLowerCase();
+
+      return nik.includes(lowerTerm) || nama.includes(lowerTerm);
+    });
+  }
+
+  renderDashboardWinners(filtered, term);
+
+  updateDashboardSearchInfo(
+    term,
+    filtered.length,
+    dashboardWinnersData.length,
+  );
+}
+
+// ============================================================
+// DASHBOARD - SEARCH RESULT INFO TEXT
+// ============================================================
+
+function updateDashboardSearchInfo(term, matchCount, totalCount) {
+  const info = document.getElementById("dashboardSearchResultInfo");
+
+  if (!info) {
+    return;
+  }
+
+  if (term === "") {
+    info.textContent = "";
+
+    return;
+  }
+
+  if (matchCount === 0) {
+    info.textContent = `Tidak ada pemenang yang cocok dari ${totalCount} data. Peserta ini kemungkinan belum menang.`;
+  } else {
+    info.textContent = `Menampilkan ${matchCount} dari ${totalCount} pemenang.`;
+  }
+}
+
+// ============================================================
+// DASHBOARD - HIGHLIGHT PENCARIAN
+// ============================================================
+
+function highlightMatch(text, term) {
+  const safeText = escapeHtml(text || "");
+
+  if (!term) {
+    return safeText;
+  }
+
+  const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const regex = new RegExp(`(${escapedTerm})`, "ig");
+
+  return safeText.replace(
+    regex,
+    '<mark class="dashboard-search-highlight">$1</mark>',
+  );
+}
+
+// ============================================================
 // DASHBOARD - RENDER (GROUP PER HADIAH)
 // ============================================================
 
-function renderDashboardWinners(winners) {
+function renderDashboardWinners(winners, searchTerm) {
   const container = document.getElementById("dashboardWinnerGroups");
 
   if (!container) {
@@ -1962,11 +2133,20 @@ function renderDashboardWinners(winners) {
   }
 
   if (!winners || winners.length === 0) {
-    container.innerHTML = `
-            <div class="text-center text-muted py-5">
-                Belum ada pemenang.
-            </div>
-        `;
+    if (searchTerm) {
+      container.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    Tidak ditemukan pemenang dengan NIK/nama
+                    "${escapeHtml(searchTerm)}".
+                </div>
+            `;
+    } else {
+      container.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    Belum ada pemenang.
+                </div>
+            `;
+    }
 
     return;
   }
@@ -2040,23 +2220,23 @@ function renderDashboardWinners(winners) {
                           : "dashboard-winner-kuning";
 
                         return `
-                                <div class="dashboard-winner-row ${colorClass}">
+                                <div class="dashboard-winner-item ${colorClass}">
 
-                                    <span class="dashboard-winner-number">
-                                        ${index + 1}
-                                    </span>
+                                    <div class="dashboard-winner-number">
+                                        #${index + 1}
+                                    </div>
 
-                                    <span class="dashboard-winner-nik">
-                                        ${escapeHtml(winner.nik)}
-                                    </span>
+                                    <div class="dashboard-winner-name">
+                                        ${highlightMatch(winner.nama, searchTerm)}
+                                    </div>
 
-                                    <span class="dashboard-winner-name">
-                                        ${escapeHtml(winner.nama)}
-                                    </span>
-
-                                    <span class="dashboard-winner-dept">
+                                    <div class="dashboard-winner-dept">
                                         ${escapeHtml(winner.departemen)}
-                                    </span>
+                                    </div>
+
+                                    <div class="dashboard-winner-nik">
+                                        ${highlightMatch(winner.nik, searchTerm)}
+                                    </div>
 
                                 </div>
                             `;

@@ -1,4 +1,99 @@
 /* ========================================
+   FONTS
+
+   Full offline - tidak pakai Google Fonts
+   atau file font eksternal apapun.
+
+   Pakai font sistem bawaan OS yang sudah
+   pasti ada di komputer manapun:
+
+   - Heading / brand / tombol -> Trebuchet MS
+     (rounded & tebal, paling dekat dengan
+     gaya huruf di banner "Ramah Tamah 2026")
+   - Body / tabel / form -> Segoe UI / system
+     font (rapi & mudah dibaca)
+======================================== */
+
+
+/* ========================================
+   VINTAGE PALETTE
+
+   Diambil dari banner "Ramah Tamah 2026":
+   cream kertas, navy & teal untuk judul,
+   coklat tinta untuk teks, gold/sage/
+   terracotta untuk splash watercolor.
+======================================== */
+
+:root {
+
+    --vintage-cream: #ffffff;
+    --vintage-cream-soft: #ffffff;
+    --vintage-cream-deep: #f2ede3;
+
+    --vintage-navy: #1d4e74;
+    --vintage-navy-dark: #123a58;
+
+    --vintage-teal: #4bc4d9;
+    --vintage-teal-dark: #2e8fa1;
+
+    --vintage-brown: #3a2a1a;
+    --vintage-brown-soft: #6b5642;
+
+    --vintage-gold: #d9a635;
+    --vintage-gold-soft: #f0c94a;
+
+    --vintage-sage: #2e8b57;
+    --vintage-sage-dark: #1f6b42;
+
+    --vintage-terracotta: #c99a6b;
+
+    --vintage-red: #c1392b;
+
+    --vintage-border: rgba(58, 42, 26, 0.14);
+    --vintage-shadow: rgba(58, 42, 26, 0.14);
+
+}
+
+
+/* ========================================
+   BASE / BODY
+
+   Latar cream dengan wash watercolor tipis
+   di sudut halaman, senada banner, tapi
+   dijaga low-opacity supaya tabel & form
+   tetap enak dibaca.
+======================================== */
+
+* {
+    font-family: 'Segoe UI', Tahoma, Verdana, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--vintage-cream);
+
+    color: var(--vintage-brown);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+
+    color: var(--vintage-navy);
+}
+
+.text-muted {
+    color: var(--vintage-brown-soft) !important;
+}
+
+
+/* ========================================
    SIDEBAR
 ======================================== */
 
@@ -9,7 +104,10 @@
     min-width: 250px;
     min-height: 100vh;
 
-    background-color: #212529;
+    background-color: #f4e8d3;
+    background-image:
+        radial-gradient(circle at 100% 0%, rgba(201, 154, 107, 0.18), transparent 45%),
+        radial-gradient(circle at 100% 100%, rgba(124, 143, 112, 0.16), transparent 45%);
 
     flex-shrink: 0;
 
@@ -57,16 +155,25 @@
    BRAND
 ======================================== */
 
-.sidebar-brand h4 {
+.sidebar-brand h4,
+.sidebar-inner h4 {
     display: flex;
     align-items: center;
 
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+
+    color: var(--vintage-navy-dark);
+
+    letter-spacing: 0.3px;
 }
 
-.sidebar-brand i {
+.sidebar-brand i,
+.sidebar-inner h4 i {
     font-size: 1.2rem;
+
+    color: var(--vintage-navy-dark);
 }
 
 
@@ -90,9 +197,11 @@
 
     padding: 0.75rem 1rem;
 
-    color: #adb5bd;
+    font-weight: 600;
 
-    border-radius: 8px;
+    color: var(--vintage-brown-soft);
+
+    border-radius: 10px;
 
     transition:
         background-color 0.2s ease,
@@ -125,9 +234,9 @@
 /* Hover */
 
 .sidebar .nav-link:hover {
-    color: #ffffff;
+    color: var(--vintage-navy-dark);
 
-    background-color: #343a40;
+    background-color: rgba(29, 78, 116, 0.08);
 }
 
 
@@ -136,7 +245,9 @@
 .sidebar .nav-link.active {
     color: #ffffff;
 
-    background-color: #0d6efd;
+    background-color: var(--vintage-navy);
+
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
 }
 
 
@@ -161,9 +272,9 @@
 
     border: none;
 
-    border-radius: 6px;
+    border-radius: 8px;
 
-    background-color: #343a40;
+    background-color: var(--vintage-navy);
 
     color: #ffffff;
 
@@ -179,7 +290,7 @@
 }
 
 .sidebar-toggle:hover {
-    background-color: #495057;
+    background-color: var(--vintage-navy-dark);
 }
 
 
@@ -192,12 +303,204 @@
 .sidebar.collapsed .sidebar-toggle {
     right: -40px;
 
-    background-color: #212529;
+    background-color: var(--vintage-navy-dark);
 }
 
 .sidebar.collapsed .sidebar-toggle:hover {
-    background-color: #343a40;
+    background-color: var(--vintage-navy);
 }
+
+
+/* ========================================
+   CARDS
+
+   Sticker/paper look: cream lembut,
+   border tipis warna tinta, shadow hangat.
+======================================== */
+
+.card {
+    background-color: var(--vintage-cream-soft);
+
+    border: 1px solid var(--vintage-border);
+    border-radius: 16px;
+
+    box-shadow: 0 6px 16px var(--vintage-shadow);
+}
+
+/*
+ * FIX EQUAL-HEIGHT CARD (h-100)
+
+ * Bootstrap h-100 membuat card ikut tinggi
+ * kolom (stretch), tapi isinya (card-body)
+ * tidak otomatis ikut memenuhi sisa ruang
+ * itu, jadi sering nyisain celah kosong di
+ * bawah walau border card-nya sudah pas.
+ * Ini memaksa isi card ikut mekar penuh.
+ */
+.card.h-100 {
+    display: flex;
+    flex-direction: column;
+}
+
+.card.h-100 > .card-body {
+    flex: 1 1 auto;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+}
+
+.card.h-100 .card-body .winner-list,
+.card.h-100 .card-body .attendance-table-scroll {
+    flex: 1 1 auto;
+}
+
+.card-header {
+    background-color: transparent;
+
+    border-bottom: 1px solid var(--vintage-border);
+
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
+}
+
+.card-header h4,
+.card-header h5 {
+    color: var(--vintage-navy);
+}
+
+
+/* ========================================
+   BUTTONS
+======================================== */
+
+.btn {
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
+    font-weight: 600;
+
+    border-radius: 999px;
+
+    letter-spacing: 0.2px;
+}
+
+.btn-primary {
+    background-color: var(--vintage-navy);
+    border-color: var(--vintage-navy);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--vintage-navy-dark) !important;
+    border-color: var(--vintage-navy-dark) !important;
+}
+
+.btn-success {
+    background-color: var(--vintage-sage);
+    border-color: var(--vintage-sage);
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: var(--vintage-sage-dark) !important;
+    border-color: var(--vintage-sage-dark) !important;
+}
+
+.btn-outline-primary {
+    color: var(--vintage-navy);
+    border-color: var(--vintage-navy);
+}
+
+.btn-outline-primary:hover,
+.btn-check:checked + .btn-outline-primary {
+    background-color: var(--vintage-navy) !important;
+    border-color: var(--vintage-navy) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--vintage-brown-soft);
+    border-color: var(--vintage-border);
+}
+
+
+/* ========================================
+   BADGES
+======================================== */
+
+.badge.bg-primary {
+    background-color: var(--vintage-navy) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--vintage-gold-soft) !important;
+
+    color: var(--vintage-brown) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--vintage-sage) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--vintage-red) !important;
+}
+
+
+/* ========================================
+   FORM CONTROLS
+======================================== */
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+
+    border: 1px solid var(--vintage-border);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--vintage-teal);
+
+    box-shadow: 0 0 0 0.2rem rgba(75, 196, 217, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--vintage-navy);
+    border-color: var(--vintage-navy);
+}
+
+.input-group-text {
+    border: 1px solid var(--vintage-border);
+
+    background-color: var(--vintage-cream-soft);
+}
+
+
+/* ========================================
+   TABLE - SCROLLABLE (BATASI TINGGI)
+
+   Supaya tabel dengan ratusan/ribuan baris
+   tidak membuat halaman jadi sangat panjang.
+   Header tabel dibuat sticky biar tetap
+   kelihatan saat scroll.
+======================================== */
+
+.attendance-table-scroll {
+    max-height: 260px;
+
+    overflow-y: auto;
+}
+
+.attendance-table-scroll thead th {
+    position: sticky;
+    top: 0;
+
+    z-index: 1;
+
+    background-color: #f8f9fa;
+}
+
 
 /* ========================================
    SCAN DAFTAR HADIR
@@ -211,10 +514,10 @@
     justify-content: center;
     align-items: center;
 
-    border: 2px dashed #dee2e6;
-    border-radius: 12px;
+    border: 2px dashed var(--vintage-terracotta);
+    border-radius: 16px;
 
-    background-color: #f8f9fa;
+    background-color: var(--vintage-cream);
 
     text-align: center;
 }
@@ -228,11 +531,11 @@
     justify-content: center;
     align-items: center;
 
-    border-radius: 12px;
+    border-radius: 16px;
 
-    background-color: #e9ecef;
+    background-color: var(--vintage-cream-deep);
 
-    color: #495057;
+    color: var(--vintage-navy);
 
     font-size: 38px;
 }
@@ -258,9 +561,9 @@
 
     border-radius: 50%;
 
-    background-color: #f1f3f5;
+    background-color: var(--vintage-cream-deep);
 
-    color: #6c757d;
+    color: var(--vintage-brown-soft);
 
     font-size: 32px;
 }
@@ -270,10 +573,29 @@
 ======================================== */
 
 .winner-display {
-    min-height: 250px;
+    height: 400px;
+
+    overflow-y: auto;
+
     display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+/*
+ * Pakai margin:auto pada anak langsung
+ * (bukan justify-content/align-items di
+ * parent), supaya:
+ * - Konten pendek (placeholder / 1 pemenang)
+ *   tetap kelihatan center secara vertikal.
+ * - Konten panjang (banyak pemenang) mulai
+ *   dari atas dan bisa di-scroll normal,
+ *   tanpa bug "flexbox center + overflow"
+ *   yang bikin bagian atas ke-scroll ke arah
+ *   negatif.
+ */
+.winner-display > * {
+    margin: auto;
+
+    width: 100%;
 }
 
 .winner-placeholder {
@@ -292,9 +614,9 @@
 
     border-radius: 50%;
 
-    background-color: #f8f9fa;
+    background-color: var(--vintage-cream-deep);
 
-    color: #6c757d;
+    color: var(--vintage-navy);
 
     font-size: 42px;
     font-weight: 700;
@@ -302,14 +624,17 @@
 
 
 .winner-name {
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
     font-size: 38px;
     font-weight: 700;
+
+    color: var(--vintage-navy);
 }
 
 
 .winner-department {
     font-size: 18px;
-    color: #6c757d;
+    color: var(--vintage-brown-soft);
 }
 
 
@@ -322,11 +647,11 @@
 
     border-radius: 20px;
 
-    background-color: #fff3cd;
+    background-color: var(--vintage-gold-soft);
 
-    color: #664d03;
+    color: var(--vintage-brown);
 
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -341,26 +666,80 @@
 
     margin-bottom: 10px;
 
-    border-radius: 10px;
+    border-radius: 12px;
 
-    background-color: #fff3cd;
+    background-color: #fbeecb;
 
-    border-left: 5px solid #ffc107;
+    border-left: 5px solid var(--vintage-gold);
 }
 
 
 .winner-item-number {
     font-size: 13px;
-    color: #6c757d;
+    color: var(--vintage-brown-soft);
 }
 
 
 .winner-item-name {
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
     font-weight: 600;
+
+    color: var(--vintage-navy);
 }
 
 
 .winner-item-prize {
     font-size: 13px;
-    color: #6c757d;
+    color: var(--vintage-brown-soft);
+}
+
+
+/* ========================================
+   LUCKY DRAW - HASIL BATCH (AUTO DRAW)
+
+   Supaya kalau jumlah pemenang banyak
+   (misal 50), hasilnya di-scroll di
+   dalam kotak sendiri, bukan bikin
+   halaman memanjang ke bawah.
+======================================== */
+
+.winner-batch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+    gap: 14px;
+
+    max-height: 280px;
+
+    overflow-y: auto;
+
+    padding-right: 6px;
+}
+
+.winner-batch-card {
+    padding: 14px;
+
+    border-radius: 12px;
+
+    background-color: #fbeecb;
+
+    border-left: 5px solid var(--vintage-gold);
+}
+
+.winner-batch-number {
+    font-size: 13px;
+    color: var(--vintage-brown-soft);
+}
+
+.winner-batch-name {
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, Verdana, sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+
+    color: var(--vintage-navy);
+}
+
+.winner-batch-department {
+    font-size: 14px;
+    color: var(--vintage-brown-soft);
 }

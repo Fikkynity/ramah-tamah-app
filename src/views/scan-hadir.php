@@ -31,7 +31,7 @@
                     <div class="scan-box mb-4">
 
                         <div class="scan-icon">
-                            <span>▣</span>
+                            <i class="bi bi-qr-code-scan" style="font-size: 50px;"></i>
                         </div>
 
                         <h5 class="mt-3 mb-2">
@@ -44,11 +44,21 @@
 
                     </div>
 
+                    <!-- DIVIDER -->
 
-                    <!-- MANUAL INPUT -->
-                    <div class="text-center text-muted mb-3">
-                        atau masukkan NIK secara manual
+                    <div class="d-flex align-items-center gap-3 mb-4">
+
+                        <div class="flex-grow-1 border-top"></div>
+
+                        <span class="text-muted small">
+                            ATAU
+                        </span>
+
+                        <div class="flex-grow-1 border-top"></div>
+
                     </div>
+                    <!-- MANUAL INPUT -->
+
 
                     <form id="attendanceForm">
 
@@ -57,7 +67,7 @@
                             <label
                                 for="nikInput"
                                 class="form-label fw-semibold">
-                                NIK
+                                NIK Peserta
                             </label>
 
                             <input
@@ -107,8 +117,10 @@
                         id="scanResult"
                         class="scan-result text-center">
 
-                        <div class="result-icon">
-                            —
+                        <div
+                            class="text-muted mb-3"
+                            style="font-size: 56px;">
+                            <i class="bi bi-qr-code" style="font-size: 50px;"></i>
                         </div>
 
                         <h5 class="mt-3">
@@ -116,7 +128,7 @@
                         </h5>
 
                         <p class="text-muted mb-0">
-                            Silakan scan QR atau masukkan NIK peserta.
+                            Silakan scan QR Code atau masukkan NIK peserta.
                         </p>
 
                     </div>
@@ -269,7 +281,7 @@
             </div>
 
 
-            <div class="table-responsive">
+            <div class="table-responsive attendance-table-scroll">
 
                 <table class="table table-hover align-middle mb-0">
 

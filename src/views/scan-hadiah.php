@@ -34,42 +34,25 @@
 
                 <div class="card-body p-4">
 
-                    <h5 class="mb-1">
+                    <h5 class="card-title mb-4">
                         Verifikasi Pemenang
                     </h5>
 
-                    <p class="text-muted mb-4">
-                        Scan QR Code peserta atau masukkan NIK secara manual.
-                    </p>
 
+                    <!-- QR SCANNER AREA -->
+                    <div class="scan-box mb-4">
 
-                    <!-- QR SCANNER -->
-
-                    <div
-                        id="qrScanner"
-                        class="border rounded-3 d-flex align-items-center justify-content-center text-center mb-4"
-                        style="
-                            height: 280px;
-                            background-color: #f8f9fa;
-                        ">
-
-                        <div>
-
-                            <div
-                                class="mb-3 text-muted"
-                                style="font-size: 48px;">
-                                ▣
-                            </div>
-
-                            <h6 class="mb-1">
-                                QR Scanner
-                            </h6>
-
-                            <p class="text-muted small mb-0">
-                                Kamera scanner akan digunakan di sini.
-                            </p>
-
+                        <div class="scan-icon">
+                            <i class="bi bi-qr-code-scan" style="font-size: 50px;"></i>
                         </div>
+
+                        <h5 class="mt-3 mb-2">
+                            Scan QR Code
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Arahkan QR pada tiket peserta ke scanner.
+                        </p>
 
                     </div>
 
@@ -105,8 +88,9 @@
                                 type="text"
                                 id="prizeNikInput"
                                 class="form-control"
-                                placeholder="Masukkan NIK"
-                                autocomplete="off">
+                                placeholder="Masukkan NIK Peserta"
+                                autocomplete="off"
+                                autofocus>
 
                             <button
                                 type="submit"
@@ -115,10 +99,6 @@
                                 Cek
                             </button>
 
-                        </div>
-
-                        <div class="form-text">
-                            Masukkan NIK peserta yang akan mengambil hadiah.
                         </div>
 
                     </form>
@@ -144,9 +124,6 @@
                         Hasil Verifikasi
                     </h5>
 
-                    <p class="text-muted mb-4">
-                        Informasi pemenang dan status hadiah.
-                    </p>
 
 
                     <!-- ================================================== -->
@@ -160,7 +137,7 @@
                         <div
                             class="text-muted mb-3"
                             style="font-size: 56px;">
-                            ?
+                            <i class="bi bi-qr-code" style="font-size: 50px;"></i>
                         </div>
 
                         <h5>
@@ -168,7 +145,7 @@
                         </h5>
 
                         <p class="text-muted mb-0">
-                            Scan QR Code atau masukkan NIK peserta.
+                            Silahkan scan QR Code atau masukkan NIK peserta.
                         </p>
 
                     </div>
@@ -343,7 +320,7 @@
 
             <!-- TABLE -->
 
-            <div class="table-responsive">
+            <div class="table-responsive attendance-table-scroll">
 
                 <table class="table table-hover align-middle mb-0">
 
