@@ -76,3 +76,21 @@ CREATE TABLE ramah_tamah.pemenang (
             status_pengambilan IN ('MENANG', 'DIAMBIL')
         )
 );
+
+-- ============================================================
+-- VIEW: v_kehadiran_tetap
+-- Filter kehadiran hanya untuk karyawan tetap
+-- NIK karyawan tetap diawali dengan 4 digit tahun + tanda strip
+-- Digunakan oleh Lucky Draw fase khusus karyawan tetap
+-- ============================================================
+CREATE OR REPLACE VIEW ramah_tamah.v_kehadiran_tetap AS
+SELECT
+    k.id,
+    k.peserta_id,
+    k.waktu_datang,
+    k.status,
+    k.created_at
+FROM ramah_tamah.kehadiran k
+INNER JOIN ramah_tamah.peserta p
+    ON p.id = k.peserta_id
+WHERE p.nik ~ '^[0-9]{4}-';

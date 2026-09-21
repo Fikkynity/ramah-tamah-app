@@ -11,6 +11,10 @@ let attendancePool = [];
 
 let winnerParticipantIds = new Set();
 
+function getCurrentDrawMode() {
+  return document.querySelector("[data-m]")?.dataset.m === "1" ? "1" : "";
+}
+
 // ============================================================
 // GLOBAL HELPERS
 // ============================================================
@@ -344,7 +348,9 @@ function showAttendanceError() {
 
 async function fetchAttendanceData() {
   try {
-    const response = await fetch("index.php?action=attendance-list");
+    const mode = getCurrentDrawMode();
+    const modeQuery = mode ? `&m=${mode}` : "";
+    const response = await fetch(`index.php?action=attendance-list${modeQuery}`);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -1056,6 +1062,10 @@ function initLuckyDraw() {
 
   async function executeManualDraw(hadiah) {
     try {
+      const mode = getCurrentDrawMode();
+      const payload = { hadiah: hadiah };
+      if (mode) payload.m = mode;
+
       const response = await fetch("index.php?action=draw-winner", {
         method: "POST",
 
@@ -1063,9 +1073,7 @@ function initLuckyDraw() {
           "Content-Type": "application/json",
         },
 
-        body: JSON.stringify({
-          hadiah: hadiah,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -1114,6 +1122,10 @@ function initLuckyDraw() {
 
   async function executeBatchDraw(hadiah, jumlah) {
     try {
+      const mode = getCurrentDrawMode();
+      const payload = { hadiah: hadiah, jumlah: jumlah };
+      if (mode) payload.m = mode;
+
       const response = await fetch("index.php?action=draw-winner-batch", {
         method: "POST",
 
@@ -1121,11 +1133,7 @@ function initLuckyDraw() {
           "Content-Type": "application/json",
         },
 
-        body: JSON.stringify({
-          hadiah: hadiah,
-
-          jumlah: jumlah,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

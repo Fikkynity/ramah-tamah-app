@@ -98,10 +98,13 @@ function verifyAttendance(string $nik): array
 
 /**
  * Ambil seluruh daftar kehadiran.
+ * Mendukung filter khusus karyawan tetap (isTetap = true).
  */
-function getAttendanceList(): array
+function getAttendanceList(bool $isTetap = false): array
 {
     $pdo = getDatabaseConnection();
+
+    $tableSource = $isTetap ? 'ramah_tamah.v_kehadiran_tetap' : 'ramah_tamah.kehadiran';
 
     $stmt = $pdo->query("
         SELECT
@@ -112,7 +115,7 @@ function getAttendanceList(): array
             p.departemen,
             k.waktu_datang,
             k.status
-        FROM ramah_tamah.kehadiran k
+        FROM {$tableSource} k
         INNER JOIN ramah_tamah.peserta p
             ON p.id = k.peserta_id
         ORDER BY k.waktu_datang DESC
@@ -188,7 +191,7 @@ function getOrCreatePrize(PDO $pdo, string $namaHadiah): array
  *
  * Mengambil tepat 1 pemenang.
  */
-function drawWinner(string $namaHadiah): array
+function drawWinner(string $namaHadiah, bool $isTetap = false): array
 {
     $namaHadiah = trim($namaHadiah);
 
@@ -224,8 +227,11 @@ function drawWinner(string $namaHadiah): array
         ");
 
 
+        // Tentukan sumber tabel kehadiran
+        $tableSource = $isTetap ? 'ramah_tamah.v_kehadiran_tetap' : 'ramah_tamah.kehadiran';
+
         // Cari peserta yang:
-        // 1. Sudah hadir
+        // 1. Sudah hadir (dari sumber yang sesuai)
         // 2. Belum pernah menang
         $stmt = $pdo->prepare("
             SELECT
@@ -235,7 +241,7 @@ function drawWinner(string $namaHadiah): array
                 p.departemen
             FROM ramah_tamah.peserta p
 
-            INNER JOIN ramah_tamah.kehadiran k
+            INNER JOIN {$tableSource} k
                 ON k.peserta_id = p.id
 
             LEFT JOIN ramah_tamah.pemenang w
@@ -347,7 +353,8 @@ function drawWinner(string $namaHadiah): array
  */
 function drawWinnerBatch(
     string $namaHadiah,
-    int $jumlahPemenang
+    int $jumlahPemenang,
+    bool $isTetap = false
 ): array {
 
     $namaHadiah = trim($namaHadiah);
@@ -392,11 +399,14 @@ function drawWinnerBatch(
         ");
 
 
+        // Tentukan sumber tabel kehadiran
+        $tableSource = $isTetap ? 'ramah_tamah.v_kehadiran_tetap' : 'ramah_tamah.kehadiran';
+
         /*
          * Ambil N peserta sekaligus.
          *
          * Peserta harus:
-         * - sudah hadir
+         * - sudah hadir (dari sumber yang sesuai)
          * - belum pernah menjadi pemenang
          */
         $stmt = $pdo->prepare("
@@ -407,7 +417,7 @@ function drawWinnerBatch(
                 p.departemen
             FROM ramah_tamah.peserta p
 
-            INNER JOIN ramah_tamah.kehadiran k
+            INNER JOIN {$tableSource} k
                 ON k.peserta_id = p.id
 
             LEFT JOIN ramah_tamah.pemenang w
