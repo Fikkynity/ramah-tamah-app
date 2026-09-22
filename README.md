@@ -1,165 +1,228 @@
 # Event Management & Lucky Draw System
 
-A native PHP application with custom MVC-like architecture for managing event participants, attendance, lucky draws, and prize claims. Built with PostgreSQL supporting custom schemas (`ramah_tamah`) and Bootstrap UI.
+Aplikasi PHP native untuk mengelola peserta acara, kehadiran, lucky draw, dan pengambilan hadiah. Aplikasi memakai PostgreSQL dengan schema `ramah_tamah` dan Bootstrap.
 
----
+## Prasyarat
 
-## 📋 Table of Contents
+- PHP `>= 8.0` dengan ekstensi `pdo_pgsql`
+- Node.js `>= 16.0` dan npm
+- PostgreSQL `>= 12.0`
+- Apache dan PHP jika dijalankan melalui XAMPP
 
-- [Prerequisites](#-prerequisites)
-- [Project Structure](#-project-structure)
-- [Installation & Setup](#-installation--setup)
-  - [Step 1: Install Dependencies](#step-1-install-dependencies)
-  - [Step 2: Create PostgreSQL Database & Schema](#step-2-create-postgresql-database--schema)
-  - [Step 3: Environment Configuration](#step-3-environment-configuration)
-  - [Step 4: Run Database Migrations](#step-4-run-database-migrations)
-  - [Step 5: Seed Initial Data](#step-5-seed-initial-data)
-- [Database Schema Overview](#-database-schema-overview)
-- [Troubleshooting](#-troubleshooting)
-- [License](#-license)
+Composer tidak diperlukan. Proyek ini tidak memakai `composer.json` atau dependency PHP eksternal.
 
----
+## Struktur Project
 
-## ⚡ Prerequisites
-
-Ensure you have the following installed on your system:
-
-- **PHP** `>= 8.0` with `pdo_pgsql` extension enabled
-- **Node.js** `>= 16.0` & **NPM**
-- **PostgreSQL** `>= 12.0`
-- **Composer** (for PHP dependency management)
-
----
-
-## 📁 Project Structure
-
-```
+```text
 .
-├── config/                  # Database and core application configurations
+├── config/                  # Konfigurasi database
 ├── database/
-│   ├── migrations/          # DDL files and migration runner scripts
-│   └── seeders/              # CSV data and seeder runner scripts
-├── public/                  # Public web root (CSS, JS, Fonts assets)
+│   ├── migrations/          # SQL dan script migration
+│   └── seeders/              # Data awal peserta
+├── public/                  # Web root dan entry point aplikasi
 ├── src/
-│   ├── controllers/          # Application logic controllers
-│   ├── css/                  # Source CSS / styling files
-│   ├── js/                   # Source JavaScript files
-│   └── views/                 # Application view components & layouts
-├── .env.example              # Sample environment configuration
-├── package.json              # NPM package management
-├── composer.json             # PHP package management
-└── README.md                 # Project documentation
+│   ├── controllers/          # Logic aplikasi
+│   ├── css/                  # Source CSS
+│   ├── js/                   # Source JavaScript
+│   └── views/                # View dan layout
+├── assets/                  # Asset pendukung
+├── .env.example              # Template konfigurasi lokal
+├── package.json              # Dependency frontend
+└── README.md
 ```
 
----
+## Instalasi
 
-## 🚀 Installation & Setup
+### 1. Clone dan install dependency frontend
 
-Follow these step-by-step instructions to initialize and run your application.
+```bash
+git clone https://github.com/Fikkynity/ramah-tamah-app.git
+cd ramah-tamah-app
+npm install
+```
 
-### Step 1: Install Dependencies
+### 2. Buat database PostgreSQL
 
-1. Clone the repository and navigate into the project root:
-
-   ```bash
-   git clone https://github.com/Fikknity/ramah-tamah-app.git
-   cd ramah-tamah-app
-   ```
-
-2. Install Node.js dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Install PHP dependencies via Composer:
-   ```bash
-   composer install
-   ```
-
-### Step 2: Create PostgreSQL Database & Schema
-
-Open your PostgreSQL CLI (`psql`) or database GUI (e.g., DBeaver, pgAdmin) and create the database along with the custom `ramah_tamah` schema:
+Gunakan `psql`, pgAdmin, atau DBeaver:
 
 ```sql
--- Create database
-CREATE DATABASE ramah_tamah_db;
+CREATE DATABASE ramah_tamah;
+```
 
--- Connect to database
-\c ramah_tamah_db
+Setelah terhubung ke database `ramah_tamah`, buat schema:
 
--- Create custom schema
+```sql
 CREATE SCHEMA IF NOT EXISTS ramah_tamah;
 ```
 
-### Step 3: Environment Configuration
+### 3. Buat file environment
 
-1. Copy `.env.example` to create your local `.env`:
+Salin `.env.example` menjadi `.env`:
 
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cp .env.example .env
+```
 
-2. Open `.env` and configure your PostgreSQL database credentials:
-   ```
-   DB_HOST=127.0.0.1
-   DB_PORT=5432
-   DB_DATABASE=ramah_tamah_db
-   DB_USERNAME=postgres
-   DB_PASSWORD=your_secure_password
-   ```
+Lalu isi kredensial PostgreSQL:
 
-### Step 4: Run Database Migrations
+```env
+APP_ENV=local
+APP_DEBUG=true
 
-Execute the migration script to build tables, constraints, and relationships in the `ramah_tamah` schema:
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=ramah_tamah
+DB_USER=postgres
+DB_PASSWORD=your_secure_password
+```
+
+`DB_NAME` dan `DB_USER` harus memakai nama variable tersebut. Aplikasi membacanya dari `config/database.php`.
+
+### 4. Jalankan migration utama
 
 ```bash
 php database/migrations/migrate.php
 ```
 
-### Step 5: Seed Initial Data
+Script tersebut menjalankan `database/migrations/create_table.sql` untuk membuat tabel utama.
 
-Import the participant master dataset from CSV into the database:
+### 5. Jalankan migration users
+
+Migration users masih berupa file SQL terpisah. Jalankan setelah migration utama:
+
+```bash
+psql -U postgres -d ramah_tamah -f database/migrations/create_users_table.sql
+```
+
+Jika diminta password, masukkan password PostgreSQL pada `.env`.
+
+Migration ini membuat tabel `ramah_tamah.users`, view `ramah_tamah.v_user_dashboard`, trigger timestamp, dan data user awal.
+
+### 6. Seed data peserta
 
 ```bash
 php database/seeders/peserta_seeder.php
 ```
 
-> **Note:** The seeder is idempotent and safe to run multiple times (`ON CONFLICT (nik) DO NOTHING`).
+Seeder aman dijalankan berulang kali karena memakai `ON CONFLICT (nik) DO NOTHING`.
 
----
+### 7. Jalankan aplikasi
 
-## 🗄️ Database Schema Overview
+Dengan XAMPP, aktifkan Apache lalu buka:
 
-All application entities are organized under the `ramah_tamah` schema:
+```text
+http://localhost/ramah-tamah-app/public/
+```
 
-| Table                   | Description                       | Key Features                                      |
-| ----------------------- | --------------------------------- | ------------------------------------------------- |
-| `ramah_tamah.peserta`   | Master list of event participants | Unique `nik`, indexed names & departments         |
-| `ramah_tamah.kehadiran` | Participant attendance logs       | One-to-one link to `peserta`, default `'HADIR'`   |
-| `ramah_tamah.hadiah`    | Lucky draw prize inventory        | Positive quantity check constraint (`jumlah > 0`) |
-| `ramah_tamah.pemenang`  | Winners and prize claim tracking  | Status flow: `'MENANG'` → `'DIAMBIL'`             |
+Untuk PHP built-in server:
 
----
+```bash
+php -S localhost:8000 -t public
+```
 
-## 🛠️ Troubleshooting
+Lalu buka `http://localhost:8000`.
 
-**`driver not found` Error:**
-Ensure the PostgreSQL extension is enabled in your `php.ini`:
+## API Endpoint
+
+Base URL:
+
+```text
+http://localhost/ramah-tamah-app/public/index.php
+```
+
+| Method | Action | Endpoint | Body / Query |
+|---|---|---|---|
+| POST | Login | `?action=login` | `{ "nik": "...", "password": "..." }` |
+| GET | User dashboard | `?action=user-dashboard&nik=...` | `nik` |
+| GET | Admin stats | `?action=admin-stats` | - |
+| POST | Scan attendance | `?action=scan-attendance` | `{ "nik": "..." }` |
+| POST | Scan prize pickup | `?action=scan-prize` | `{ "nik": "..." }` |
+| GET | Winners pagination | `?action=winners-paginated&page=1&per_page=50` | `page`, `per_page` |
+| GET | Users list | `?action=users-list&page=1&per_page=50` | `search`, `role`, `page`, `per_page` |
+| POST | Update user role | `?action=update-user-role` | `{ "nik": "...", "role": "user" }` |
+| POST | Attendance web | `?action=attendance` | `{ "nik": "..." }` |
+| GET | Attendance list | `?action=attendance-list` | optional `m=1` |
+| POST | Draw winner | `?action=draw-winner` | `{ "hadiah": "...", "m": "0" }` |
+| POST | Draw winner batch | `?action=draw-winner-batch` | `{ "hadiah": "...", "jumlah": 1, "m": "0" }` |
+| GET | Winner list | `?action=winner-list` | - |
+| POST | Check prize | `?action=check-prize` | `{ "nik": "..." }` |
+| POST | Take prize | `?action=take-prize` | `{ "pemenang_id": 1 }` |
+
+Contoh login:
+
+```bash
+curl -X POST "http://localhost/ramah-tamah-app/public/index.php?action=login" \
+  -H "Content-Type: application/json" \
+  -d '{"nik":"2022-001931","password":"2022-001931"}'
+```
+
+## User Awal
+
+Migration users membuat admin awal:
+
+```text
+NIK      : 2022-001931
+Password : 2022-001931
+Role     : admin
+```
+
+Password saat ini divalidasi sama dengan NIK oleh endpoint login.
+
+## Android Emulator
+
+Project Android memakai backend ini melalui:
+
+```text
+http://10.0.2.2/ramah-tamah-app/public/
+```
+
+`10.0.2.2` menunjuk ke localhost komputer dari Android Emulator. Pastikan Apache, PostgreSQL, database, dan migration sudah aktif.
+
+## Database Schema
+
+Semua entity berada di schema `ramah_tamah`:
+
+| Table / View | Deskripsi |
+|---|---|
+| `ramah_tamah.peserta` | Master peserta acara |
+| `ramah_tamah.kehadiran` | Catatan kehadiran peserta |
+| `ramah_tamah.hadiah` | Inventaris hadiah |
+| `ramah_tamah.pemenang` | Pemenang dan status pengambilan hadiah |
+| `ramah_tamah.users` | Akun peserta dan admin |
+| `ramah_tamah.v_user_dashboard` | Data dashboard user |
+
+## Troubleshooting
+
+### `driver not found`
+
+Aktifkan ekstensi PostgreSQL pada `php.ini`:
 
 ```ini
 extension=pdo_pgsql
 ```
 
-**Schema Access Permission:**
-Ensure the database user has sufficient rights:
+Restart Apache setelah mengubah `php.ini`.
 
-```sql
-GRANT ALL ON SCHEMA ramah_tamah TO your_username;
+### `relation does not exist`
+
+Pastikan migration dijalankan berurutan:
+
+```bash
+php database/migrations/migrate.php
+psql -U postgres -d ramah_tamah -f database/migrations/create_users_table.sql
+php database/seeders/peserta_seeder.php
 ```
 
----
+### Permission schema
 
-## 📄 License
+Berikan permission jika user PostgreSQL tidak memiliki akses:
+
+```sql
+GRANT ALL ON SCHEMA ramah_tamah TO postgres;
+GRANT ALL ON ALL TABLES IN SCHEMA ramah_tamah TO postgres;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA ramah_tamah TO postgres;
+```
+
+## License
 
 Proprietary - All Rights Reserved.
